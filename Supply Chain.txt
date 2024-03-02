@@ -1,0 +1,48 @@
+pragma solidity ^0.8.0;
+
+contract SupplyChainManagement {
+    // Structure to represent a product in the supply chain
+    struct Product {
+        uint256 productId;
+        string name;
+        address manufacturer;
+        address[] distributors; // Array of addresses for distributors who handled the product
+        uint256 timestamp; // Timestamp of each stage in the supply chain
+    }
+
+    // Mapping to store product information using product ID as the key
+    mapping(uint256 => Product) public products;
+
+    // Event to log product creation
+    event ProductCreated(uint256 productId, string name, address manufacturer);
+
+    // Event to log product movement through the supply chain
+    event ProductUpdated(uint256 productId, address currentDistributor);
+
+    constructor() {}
+
+    // Function to create a new product
+    function createProduct(uint256 _productId, string memory _name) public {
+        products[_productId] = Product({
+            productId: _productId,
+            name: _name,
+            manufacturer: msg.sender,
+            distributors: new address[](0),
+            timestamp: block.timestamp
+        });
+        emit ProductCreated(_productId, _name, msg.sender);
+    }
+
+    // Function to update product information when it moves to a new distributor
+    function updateProduct(uint256 _productId, address _newDistributor) public {
+        require(products[_productId].manufacturer == msg.sender, "Only the manufacturer can update product information");
+        products[_productId].distributors.push(_newDistributor);
+        products[_productId].timestamp = block.timestamp;
+        emit ProductUpdated(_productId, _newDistributor);
+    }
+
+    // Function to retrieve product information by ID
+    function getProduct(uint256 _productId) public view returns (Product memory) {
+        return products[_productId];
+    }
+}
